@@ -3,6 +3,13 @@ set cpo&vim
 
 scriptencoding utf-8
 
+function s:readdir(dirpath)
+	if exists('*readdir')
+		return readdir(a:dirpath)
+	endif
+	return map(split(glob('`find '.shellescape(a:dirpath).' -type f`'),'\n'),{ -> v:val[len(a:dirpath)+1:]})
+endfunction
+
 " save session
 function! vsession#save() abort
 	let file = input("file:")
@@ -18,13 +25,13 @@ endfunction
 function! vsession#load() abort
 	if exists('*fzf#run()') && get(g:, 'vsession_use_fzf', 0)
 		call fzf#run({
-					\  'source': readdir(g:vsession_path),
+					\  'source': s:readdir(g:vsession_path),
 					\  'sink':    function('s:_load_session'),
 					\  'options': '+m -x +s',
 					\  'down':    '40%'})
 
 	elseif has('patch-8.1.1575')
-		let l:sessions = readdir(g:vsession_path)
+		let l:sessions = s:readdir(g:vsession_path)
 		call popup_menu(l:sessions, {
 					\ 'filter': 'popup_filter_menu',
 					\ 'callback': function('s:_load_session_filter', [l:sessions]),
@@ -39,13 +46,13 @@ endfunction
 function! vsession#delete() abort
 	if exists('*fzf#run()') && get(g:, 'vsession_use_fzf', 0)
 		call fzf#run({
-					\  'source': readdir(g:vsession_path),
+					\  'source': s:readdir(g:vsession_path),
 					\  'sink':    function('s:_delete_session'),
 					\  'options': '-m -x +s',
 					\  'down':    '40%'})
 
 	elseif has('patch-8.1.1575')
-		let l:sessions = readdir(g:vsession_path)
+		let l:sessions = s:readdir(g:vsession_path)
 		call popup_menu(l:sessions, {
 					\ 'filter': 'popup_filter_menu',
 					\ 'callback': function('s:_delete_session_filter', [l:sessions]),
